@@ -15,8 +15,12 @@ sub scan_dir
 			scan_dir($filename, $hash);
 		} else {
 			my $file_size = (stat($filename))[7];
-			if ($file_size > 1e6) { # process only file size > 10MB
-				chomp(my $md5 = `md5sum "$filename" | cut -c1-32`);
+			if (not defined $file_size) {
+				print "# Skip file with undefined size: '$filename'\n";
+			} elsif ($file_size > 1e6) { # process only file size > 10MB
+				my $fn = $filename;
+				$fn =~ s/'/'\\''/g;
+				chomp(my $md5 = `md5sum '$fn' | cut -c1-32`);
 				push @{$hash->{$md5}}, $filename;
 			}
 		}
@@ -26,7 +30,7 @@ sub scan_dir
 my %hash = ();
 for my $dir (@ARGV) {
 	die "'$dir' is not a directory!\n" unless -d $dir;
-	print STDERR "Scanning '$dir' ...\n";
+	print "# Scanning '$dir' ...\n";
 	scan_dir($dir, \%hash);
 }
 
